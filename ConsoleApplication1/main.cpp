@@ -2,7 +2,6 @@
 #include <thread>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <stdio.h>
-#include <vector>
 #include <cstdint>
 #include <iostream>
 #include "vector.h"
@@ -190,15 +189,11 @@ static void HackThread(HMODULE instance) {
 				continue;
 			} 
 			Vector2 PixelCords;
-			Matrix4x4 view = viewMatrix(eye, localYaw, localPitch);
-			Matrix4x4 projection = getProjectionMatrix(fov, aspect);
 
-			Matrix4x4 viewProjection = projection * view;
 			Vector3 pos = { x,legsY ,z };
 			Vector4 worldPos = {x, legsY, z, 1.0f};
-			Vector4 entityPos = viewProjection * worldPos;
 
-			if (WorldToScreen(pos, viewProjection, cs2Width, cs2Height, PixelCords)) {
+			if (WorldToScreen(pos, (float*)reinterpret_cast<float*>(base + 0x1E330F0), cs2Width, cs2Height, PixelCords)) {
 				DrawBox(PixelCords.x, PixelCords.y, 70.f,70.f,1.f,0.f,0.f,1.f, shaderProgram,VAO,VBO,EBO, cs2Width,cs2Height);
 			}
 			

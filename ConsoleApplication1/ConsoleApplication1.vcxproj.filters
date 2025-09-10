@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConsoleApplication1.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="entity.cpp">
@@ -24,7 +24,7 @@
     <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="math.cpp">
+    <ClCompile Include="vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="esp.cpp">
@@ -39,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="esp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\Downloads\offsets.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

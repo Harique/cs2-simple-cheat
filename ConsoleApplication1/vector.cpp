@@ -1,4 +1,5 @@
 #include "vector.h"
+#pragma once
 
 void Vector2::negate() {
     x = x * -1;

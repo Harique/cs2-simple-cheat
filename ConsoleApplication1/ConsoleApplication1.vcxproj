@@ -126,13 +126,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConsoleApplication1.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="entity.cpp" />
     <ClCompile Include="esp.cpp" />
     <ClCompile Include="glad.c" />
-    <ClCompile Include="math.cpp" />
+    <ClCompile Include="vector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\..\Downloads\offsets.hpp" />
     <ClInclude Include="esp.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="vector.h" />
