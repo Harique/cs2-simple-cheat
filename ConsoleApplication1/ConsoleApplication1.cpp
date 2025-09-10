@@ -11,6 +11,7 @@
 #include <GLFW/glfw3native.h>
 #include "esp.cpp"
 #include "math.h"
+#include "math.cpp"
 using namespace std;
 
 
@@ -22,15 +23,24 @@ static void HackThread(HMODULE instance) {
 	printf("Cheat injected successfully!\n\n");
 	
 	uintptr_t base = (uintptr_t)GetModuleHandleA("client.dll");
-
+	bool toggle = false;
 	
 
 	while (!GetAsyncKeyState(VK_RETURN))
 	{
-		
-		 float localPlayerCameraY;
-		 float localYaw;
-		 float localPitch;
+		if (GetAsyncKeyState('J') & 1) {
+			toggle = !toggle;
+			std::cout << "Feature is now " << (toggle ? "ON" : "OFF") << "\n";
+		}
+
+		if (toggle == false)   // <-- FIXED: comparison, not assignment
+			continue;
+		Vector3 local_player;
+		Vector3 enemy;
+		ViewAngles angles;
+		float localPlayerCameraY;
+		float* localYaw = reinterpret_cast<float*>(base + 0x1E3DC24);
+		float* localPitch = reinterpret_cast<float*>(base + 0x1E3DC20);
 		 
 		 
 		for (int i = 0; i < 11; i++) {
@@ -44,20 +54,24 @@ static void HackThread(HMODULE instance) {
 
 			float x = *(float*)(Entity + 0xF58);
 			float z = *(float*)(Entity + 0xF5C);
-			float y = *(float*)(Entity + 0xF60); // Z is used for up and down not Y so i renamed the variable to match normal XYZ, also this is the Z for the legs not the camera which is needed for the viewmatrix
+			float y = *(float*)(Entity + 0xF60);// up
 			if (i == 0) {
-				localPlayerCameraY = *(float*)(base + 0x1D16A08); // Z value for camera, possibly needed for headshot aimbot later, but needed for ESP.
-				float* pitchPtr = (float*)(base + 0x1E1DC48);
-				localYaw = *(pitchPtr + 1);
-				localPitch = *pitchPtr;
-				
+				localPlayerCameraY = *(float*)(base + 0x1D16A08);
+				local_player = { x,z,localPlayerCameraY };
 				continue;
-			} 
-			
+			}
+			else {
+				enemy = { x,z,y };
+			}
+			Vector3 direction = enemy - local_player;
+			angles.yaw = to_degrees(std::atan2(direction.y, direction.x));
+			angles.pitch = to_degrees(std::atan2(-direction.z - 63.f, std::hypot(direction.x, direction.y))); // remove hard coded subtration when you get enemy camera Z
+			*localYaw = angles.yaw;
+			*localPitch = angles.pitch;
 
 		}
 
-
+		
 		Sleep(16);
 	}
 

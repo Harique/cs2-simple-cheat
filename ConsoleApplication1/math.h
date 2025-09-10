@@ -35,6 +35,11 @@ public:
         return result;
     }
 };
+class ViewAngles {
+public:
+    float yaw;
+    float pitch;
+};
 Vector3 Vec3;
 inline Matrix4x4 viewMatrix(Vector3& eye, float& yaw, float& pitch) {
     float yawRad = DEG2RAD(yaw);
