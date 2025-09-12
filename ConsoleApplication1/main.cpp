@@ -4,14 +4,12 @@
 #include <stdio.h>
 #include <cstdint>
 #include <iostream>
-#include "vector.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-#include "esp.cpp"
 #include "math.h"
-using namespace std;
-
+#include "esp.h"
+#pragma once
 
 static void HackThread(HMODULE instance) {
 	AllocConsole();
@@ -33,7 +31,7 @@ static void HackThread(HMODULE instance) {
 		"uniform vec4 uColor;\n"
 		"void main()\n"
 		"{\n"
-			"FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+			"FragColor = vec4(1.0f, 0.0f, 1.0f, 1.0f);\n"
 		"}\0";
 	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE); //controls transparency
 	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // no decoractions
@@ -148,9 +146,9 @@ static void HackThread(HMODULE instance) {
 		ClientToScreen(hwnd, &bottomRight);
 		int cs2X = topLeft.x;
 		int cs2Y = topLeft.y;
-		float cs2Width = bottomRight.x - topLeft.x;
-		float cs2Height = bottomRight.y - topLeft.y;
-		float aspect = cs2Width / cs2Height;
+		int cs2Width = bottomRight.x - topLeft.x;
+		int cs2Height = bottomRight.y - topLeft.y;
+		float aspect = (float)cs2Width / (float)cs2Height;
 		float fov = 90.f; //hard coded cause its the default and cant be changed in cs2 legitamitely 
 
 		//  whatever background color i chose in glClearColor
@@ -167,7 +165,14 @@ static void HackThread(HMODULE instance) {
 		 float localYaw;
 		 float localPitch;
 		 Vector3 eye;
-		 
+
+		 Matrix4x4 viewProj((float*)(base + 0x1E330F0));  // ptr to view matrix
+		 Matrix4x4 DXtoGL;
+		 DXtoGL.m[2][2] = 2.0f;     // scale Z
+		 DXtoGL.m[2][3] = -1.0f;    // shift Z
+
+		 Matrix4x4 corrected = viewProj * DXtoGL;
+
 		for (int i = 0; i < 11; i++) {
 			//sometimes when adding bots, first would be added 8 numbers away from 0 and THEN be incremented by 10 for each
 			//no idea why, need investigation
@@ -178,28 +183,55 @@ static void HackThread(HMODULE instance) {
 			if (health <= 0 || health > 100) continue;
 
 			float x = *(float*)(Entity + 0xF58);
-			float z = *(float*)(Entity + 0xF5C);
-			float legsY = *(float*)(Entity + 0xF60); // Z is used for up and down not Y so i renamed the variable to match normal XYZ, also this is the Z for the legs not the camera which is needed for the viewmatrix
+			float y = *(float*)(Entity + 0xF5C);
+			float z = *(float*)(Entity + 0xF60); // Z is used for up and down not Y so i renamed the variable 
+			// to match normal XYZ, also this is the Z for the legs not the camera which is needed for the viewmatrix
+			
+			Vector4 feet(x,y,z,1.0f);
+			Vector4 head = feet + Vector4(0,0,70,0.0f);
+
 			if (i == 0) {
 				localPlayerCameraY = *(float*)(base + 0x1D16A08); // Z value for camera, possibly needed for headshot aimbot later, but needed for ESP.
 				float* pitchPtr = (float*)(base + 0x1E1DC48);
 				localYaw = *(pitchPtr + 1);
 				localPitch = *pitchPtr;
-				eye = { x,legsY,z };
+				eye = { x,y,z };
 				continue;
 			} 
-			Vector2 PixelCords;
+			Vector2 screenFeet, screenHead;
 
-			Vector3 pos = { x,legsY ,z };
-			Vector4 worldPos = {x, legsY, z, 1.0f};
+			if (WorldToScreen(feet, viewProj, screenFeet) && WorldToScreen(head, viewProj, screenHead)) {
 
-			if (WorldToScreen(pos, (float*)reinterpret_cast<float*>(base + 0x1E330F0), cs2Width, cs2Height, PixelCords)) {
-				DrawBox(PixelCords.x, PixelCords.y, 70.f,70.f,1.f,0.f,0.f,1.f, shaderProgram,VAO,VBO,EBO, cs2Width,cs2Height);
+
+				float height = abs(screenFeet.y - screenHead.y);
+				float width = height * 0.5f;
+
+				float left = screenHead.x - width / 2;
+				float right = screenHead.x + width / 2;
+				float top = screenHead.y;
+				float bottom = screenFeet.y;
+
+				//std::cout << "head vec2: " << screenHead << std::endl;
+				//std::cout << "feet vec2: " << screenFeet << std::endl;
+				//std::cout << "height: " << height << std::endl;
+				//std::cout << "width: " << width << std::endl;
+				//std::cout << "left: " << left << std::endl;
+				//std::cout << "right: " << right << std::endl;
+				//std::cout << "top: " << top << std::endl;
+				//std::cout << "bottom: " << bottom << std::endl;
+				//std::cout << "------------------------------" << std::endl;
+
+				Vector3 corners[4] = {};
+				corners[0] = Vector3(left, bottom, 0.0f);
+				corners[1] = Vector3(left, top, 0.0f);
+				corners[2] = Vector3(right, bottom, 0.0f);
+				corners[3] = Vector3(right, top, 0.0f);
+
+				DrawBox(corners, 70.f,70.f,1.f,1.f, shaderProgram,VAO,VBO,EBO);
 			}
-			
 
 		}
-
+		
 		
 		
 		glfwSwapBuffers(window);

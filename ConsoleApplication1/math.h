@@ -1,38 +1,71 @@
-#include "vector.h"
 #include <cmath>
 #include <iostream>
-
-
+#include <ostream>
+#define DEG2RAD(x) ((x) * 0.01745329251994329576923690768489)
 #pragma once
 
-#define DEG2RAD(x) ((x) * 0.01745329251994329576923690768489)
+struct Vector2 {
+	float x;
+	float y;
+	Vector2();
+	Vector2(float x, float y);
+	Vector2 operator-(const Vector2& other);
+	Vector2 operator+(const Vector2& other);
+	Vector2 operator/(const float& other);
+	float operator*(const Vector2& other);
+	Vector2 operator*(const float& scalar);
+	Vector2 normalized(const Vector2& v);
+	void negate();
 
-struct Matrix4x4 {
-    float matrix[16];
 };
 
-Vector3 Vec3;
- 
-inline bool WorldToScreen(const Vector3& pos, float viewProj[], int screenWidth, int screenHeight, Vector2& out) {
+struct Vector3 {
+	float x;
+	float y;
+	float z;
+	Vector3();
+	Vector3(float x, float y, float z);
+	Vector3 operator-(const Vector3& other);
+	Vector3 operator+(const Vector3& other);
+	Vector3 operator/(const float& other);
+	float operator*(const Vector3& other);
+	inline Vector3 operator*(const float& scalar);
+	Vector3 normalized(const Vector3& v);
+	Vector3 crossp(const Vector3& a, const Vector3& b);
+	void negate();
 
-    float clipw = (viewProj[12] * pos.x) + (viewProj[13] * pos.y) + (viewProj[14] * pos.z) + viewProj[15];
+};
+struct Vector4 {
+	float x;
+	float y;
+	float z;
+	float w;
+	Vector4();
+	Vector4(float x, float y, float z, float w);
+	Vector4 operator-(const Vector4& other);
+	Vector4 operator+(const Vector4& other);
+	Vector4 operator/(const float& other);
+	float operator*(const Vector4& other);
+	Vector4 operator*(const float& scalar);
+	void negate();
 
-    if (clipw > 0.001f) {
-        
-        float clipx = (viewProj[0] * pos.x) + (viewProj[1] * pos.y) + (viewProj[2] * pos.z) + viewProj[3];
-        float clipy = (viewProj[4] * pos.x) + (viewProj[5] * pos.y) + (viewProj[6] * pos.z) + viewProj[7];
-
-
-
-        out.x = (screenWidth / 2) + (screenWidth / 2) * screenWidth / clipw;
-        out.y = (screenHeight / 2) - (screenHeight / 2) * screenHeight / clipw;
-
-        
-        return true;
-    }
-
-    return false;
-
-}
+};
 
 
+struct Matrix4x4 {
+    float m[4][4] = { 0 };
+
+	Vector4 operator*(const Vector4& v) const;
+	Matrix4x4 operator*(const Matrix4x4& b) const;
+	Matrix4x4(float* pointerToMemoryMatrix);
+	Matrix4x4();
+	Matrix4x4(float value);
+
+};
+    
+bool WorldToScreen(const Vector4& pos, const Matrix4x4& viewProj, Vector2& out);
+
+std::ostream& operator<<(std::ostream& os, const Vector2& v);
+std::ostream& operator<<(std::ostream& os, const Vector3& v);
+std::ostream& operator<<(std::ostream& os, const Vector4& v);
+std::ostream& operator<<(std::ostream& os, const Matrix4x4& matrix);
